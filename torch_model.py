@@ -51,9 +51,7 @@ def training(x ,y):
 			except:
 				x_batch = x[(batch * batch_size) :]
 				y_batch = y[(batch * batch_size) :]
-				
-			x_batch = torch.from_numpy(x_batch).type(torch.FloatTensor)
-			y_batch = torch.from_numpy(y_batch).type(torch.FloatTensor)
+
 			out = model(x_batch)
 			loss = criterion(out.view(-1), y_batch)
 			optimizer.zero_grad()
@@ -63,27 +61,31 @@ def training(x ,y):
 		if epoch % 10 == 0:
 			with torch.no_grad():
 				model.eval()
-				xtrain = torch.from_numpy(x).type(torch.FloatTensor)
-				ypred = model(xtrain)
-				score = model.score(y, ypred.detach().numpy()) 
+				ypred = model(x)
+				score = model.score(y, ypred) 
 			print("Epoch: %d,  loss: %.5f, score: %.5f " % (epoch, loss.item(), score))
 	
 	print(f"Exporting model")
-	dummy_input = Variable(torch.randn(2, 12)) 
-	torch.onnx.export(model, dummy_input, "onnx_model_name.onnx")
+	torch.onnx.export(model, x, "onnx_model_name.onnx")
 			
 	return model
 
 def evaluation(model, x, y):
 	with torch.no_grad():
 		model.eval()
-		x = torch.from_numpy(x).type(torch.FloatTensor)
 		ypred = model(x)
-		return model.score(y, ypred.detach().numpy())
+		return model.score(y, ypred)
 		
 if __name__ == '__main__':
-	x_train, x_test, y_train, y_test = data_generator(num_samples=100, visualize_plot=True)
+	x_train, x_test, y_train, y_test = data_generator(num_samples=100, visualize_plot=False)
+	
+	x_train = torch.from_numpy(x_train).type(torch.FloatTensor)
+	y_train = torch.from_numpy(y_train).type(torch.FloatTensor)
+	x_test = torch.from_numpy(x_test).type(torch.FloatTensor)
+	y_test = torch.from_numpy(y_test).type(torch.FloatTensor)
+	
 	model = training(x_train, y_train)
 	train_score = evaluation(model, x_train, y_train)
 	test_score = evaluation(model, x_test, y_test)
+	
 	print(f"\nTrain score: {train_score}\nTest score: {test_score}")
