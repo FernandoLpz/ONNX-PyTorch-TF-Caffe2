@@ -12,6 +12,8 @@ numpy = "*"
 keras = "*"
 matplotlib = "*"
 sklearn = "*"
+onnx = "*"
+ipython = "*"
 
 [requires]
 python_version = "3.7"

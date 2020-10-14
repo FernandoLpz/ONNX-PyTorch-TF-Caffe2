@@ -1,4 +1,4 @@
-import torch
+import onnx
 import torch.onnx
 import numpy as np
 import torch.nn as nn
@@ -6,35 +6,11 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
 
+from models import TorchModel
 from data import data_generator
 
-	
-class TorchModel(nn.ModuleList):
-	def __init__(self):
-		super(TorchModel, self).__init__()
-		self.linear_1 = nn.Linear(2, 12)
-		self.linear_2 = nn.Linear(12, 1)
-		
-	def forward(self, x):
-		out = self.linear_1(x)  
-		out = torch.tanh(out)
-		out = self.linear_2(out)
-		out = torch.sigmoid(out)
-		
-		return out
-		
-	@staticmethod
-	def score(y_true, y_pred):
-		tp, fp = 0, 0
-		for ytrue, ypred in zip(y_true, y_pred):
-			if (ytrue == 1) and (ypred >= 0.5):
-				tp += 1
-			elif (ytrue == 0) and (ypred < 0.5):
-				fp += 1
-		
-		return (tp+fp)/len(y_true)
+def train_torch_model(x ,y):
 
-def training(x ,y):
 	model = TorchModel()
 	optimizer = optim.Adam(model.parameters(), lr=0.1)
 	criterion = nn.BCELoss()
@@ -63,10 +39,7 @@ def training(x ,y):
 				model.eval()
 				ypred = model(x)
 				score = model.score(y, ypred) 
-			print("Epoch: %d,  loss: %.5f, score: %.5f " % (epoch, loss.item(), score))
-	
-	print(f"Exporting model")
-	torch.onnx.export(model, x, "onnx_model_name.onnx")
+			print("Epoch: %d,  loss: %.5f, accuracy: %.5f " % (epoch, loss.item(), score))
 			
 	return model
 
@@ -77,15 +50,37 @@ def evaluation(model, x, y):
 		return model.score(y, ypred)
 		
 if __name__ == '__main__':
+	# Generate data samples for training and test
 	x_train, x_test, y_train, y_test = data_generator(num_samples=100, visualize_plot=False)
 	
+	# Transform numpy arrays into torch tensors
 	x_train = torch.from_numpy(x_train).type(torch.FloatTensor)
 	y_train = torch.from_numpy(y_train).type(torch.FloatTensor)
 	x_test = torch.from_numpy(x_test).type(torch.FloatTensor)
 	y_test = torch.from_numpy(y_test).type(torch.FloatTensor)
 	
-	model = training(x_train, y_train)
-	train_score = evaluation(model, x_train, y_train)
-	test_score = evaluation(model, x_test, y_test)
+	# Train torch model
+	torch_model = train_torch_model(x_train, y_train)
+	# Evaluates torch model
+	train_score = evaluation(torch_model, x_train, y_train)
+	test_score = evaluation(torch_model, x_test, y_test)
+	print(f"Train acc: {train_score}, Test acc: {test_score}")
 	
-	print(f"\nTrain score: {train_score}\nTest score: {test_score}")
+	print(f"Exporting model")
+	torch.onnx.export(torch_model, x_train, "onnx_model_name.onnx")
+	
+	print(f"Loading model")
+	model_onnx = onnx.load("onnx_model_name.onnx")
+	
+	# Print a human readable representation of the graph
+	print(onnx.helper.printable_graph(model_onnx.graph))
+	
+	import caffe2.python.onnx.backend as backend
+	from caffe2.python import core, workspace
+	# Generate data samples for training and test
+	x_train, x_test, y_train, y_test = data_generator(num_samples=100, visualize_plot=False)
+	inferred_model = onnx.shape_inference.infer_shapes(model_onnx)
+	print(inferred_model)
+	# rep = backend.prepare(model_onnx, device="CPU")
+	# output = rep.run(x_train.astype(np.float32))
+	# print(output)
