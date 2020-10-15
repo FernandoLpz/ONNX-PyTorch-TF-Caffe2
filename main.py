@@ -66,21 +66,38 @@ if __name__ == '__main__':
 	test_score = evaluation(torch_model, x_test, y_test)
 	print(f"Train acc: {train_score}, Test acc: {test_score}")
 	
-	print(f"Exporting model")
-	torch.onnx.export(torch_model, x_train, "onnx_model_name.onnx")
+	######################################################################
+	# print(f"Save pytorch model ")
+	# torch.save(torch_model.state_dict(),"model.pt")
+	# print(f"Model dicth:\n{torch_model.state_dict()}")
+	# print(f"Init again torch model")
+	# trained_model = TorchModel()
+	# print(f"Load weights")
+	# trained_model.load_state_dict(torch.load('model.pt'))
+	dummy_input = Variable(torch.randn(1,2))
+	# print(f"Export into onnx")
+	input_names = ["Input Layer", "Layer 1 (weights)", "Layer 1 (biases)", "Layer 2 (weights)", "Layer 2 (biases)" ]
+	output_names = [ "Output Layer" ]
+	torch.onnx.export(torch_model, dummy_input, "onnx_model_name.onnx", verbose=True, opset_version=10, input_names=input_names, output_names=output_names)
 	
-	print(f"Loading model")
+	
+	######################################################################
+	print(f"Load into ONNNX")
+	# Load the ONNX model
 	model_onnx = onnx.load("onnx_model_name.onnx")
-	
+	print(f"Print ONNX checker")
+	# Check that the IR is well formed
+	print(onnx.checker.check_model(model_onnx))
+	print(f"Print ONNX graph")
 	# Print a human readable representation of the graph
 	print(onnx.helper.printable_graph(model_onnx.graph))
 	
-	import caffe2.python.onnx.backend as backend
-	from caffe2.python import core, workspace
-	# Generate data samples for training and test
-	x_train, x_test, y_train, y_test = data_generator(num_samples=100, visualize_plot=False)
-	inferred_model = onnx.shape_inference.infer_shapes(model_onnx)
-	print(inferred_model)
-	# rep = backend.prepare(model_onnx, device="CPU")
-	# output = rep.run(x_train.astype(np.float32))
-	# print(output)
+	import onnxruntime
+	ort_session = onnxruntime.InferenceSession("onnx_model_name.onnx")
+	print(f"This is the onnx session: {ort_session}")
+	
+	# compute ONNX Runtime output prediction
+	ort_inputs = {ort_session.get_inputs()[0].name : dummy_input.detach().numpy()}
+	ort_outs = ort_session.run(None, ort_inputs)
+	
+	print(f"Print onnx results: {ort_outs}")
