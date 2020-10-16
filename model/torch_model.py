@@ -24,4 +24,4 @@ class TorchModel(nn.ModuleList):
 			elif (ytrue == 0) and (ypred < 0.5):
 				fp += 1
 		
-		return (tp+fp)/len(y_true)
+		return (tp + fp)/len(y_true)
