@@ -18,6 +18,7 @@ class Train:
       self.batch_size = 2
       self.num_epochs = 100
       self.learning_rate = 0.1
+      self.onnx_path = f"onnx"
       
    def train_torch_model(self):
    
@@ -79,4 +80,4 @@ class Train:
          output_names = []
       
       # Save the model as onnx
-      torch.onnx.export(self.model, x, "torch_model.onnx", verbose=verbose, input_names=input_names, output_names=output_names)
+      torch.onnx.export(self.model, x, f"{self.onnx_path}/torch_model.onnx", verbose=verbose, input_names=input_names, output_names=output_names)
