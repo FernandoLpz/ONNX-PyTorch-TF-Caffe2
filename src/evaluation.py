@@ -13,12 +13,13 @@ class Evaluation:
    	pass
    
    def onnx_runtime_evaluation(self, x, y, print_graph=False):
+      
       if print_graph:
       	# Load the ONNX model
       	model_onnx = onnx.load(self.onnx_model)
-      	print(f"PRINT GRAPH MODEL")
       	print(onnx.helper.printable_graph(model_onnx.graph))
-      
+
+      x = x.astype('float32')
       onnx_session = onnxruntime.InferenceSession(self.onnx_model)
       # compute ONNX Runtime output prediction
       onnx_inputs = {onnx_session.get_inputs()[0].name : x}

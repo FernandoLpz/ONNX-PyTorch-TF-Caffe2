@@ -34,11 +34,11 @@ class Train:
    		self.model.train()
    		for batch in range(num_batches):
    			try:
-   				x_batch = self.x[(batch * batch_size) : ((batch+1) * batch_size)]
-   				y_batch = self.y[(batch * batch_size) : ((batch+1) * batch_size)]
+   				x_batch = self.x[(batch * self.batch_size) : ((batch+1) * self.batch_size)]
+   				y_batch = self.y[(batch * self.batch_size) : ((batch+1) * self.batch_size)]
    			except:
-   				x_batch = self.x[(batch * batch_size) :]
-   				y_batch = self.y[(batch * batch_size) :]
+   				x_batch = self.x[(batch * self.batch_size) :]
+   				y_batch = self.y[(batch * self.batch_size) :]
             
             # Feed model
    			out = self.model(x_batch)
@@ -62,22 +62,27 @@ class Train:
    			
    	pass
    	
-   def save_model(self, dummy_input=True, names=True, verbose=True,):
+   def save_model(self, dummy_input=False, names=True, verbose=False):
       # If true, a generic input is generated
       # otherwise the training tensor is used
       if dummy_input:
-         x = Variable(torch.randn(1,self.batch_size))
+         x = Variable(torch.randn(self.batch_size, 2))
       else:
          x = self.x
       
       # If true, each layer will be labeled
       # otherwise, none name will be passed
       if names:
-         input_names = ["Input Layer","Linear 1 (weights)","Linear 1 (biases)","Linear 2 (weights)","Linear 2 (biases)" ]
+         input_names = ["input","Linear 1 (weights)","Linear 1 (biases)","Linear 2 (weights)","Linear 2 (biases)" ]
          output_names = [ "Output Layer" ]
       else:
          input_names = []
          output_names = []
-      
+
       # Save the model as onnx
-      torch.onnx.export(self.model, x, f"{self.onnx_path}/torch_model.onnx", verbose=verbose, input_names=input_names, output_names=output_names)
+      torch.onnx.export(self.model, x, 
+                        f"{self.onnx_path}/torch_model.onnx", 
+                        verbose=verbose, 
+                        input_names=input_names, 
+                        output_names=output_names,
+                        dynamic_axes={"input": {0: "batch"}})
