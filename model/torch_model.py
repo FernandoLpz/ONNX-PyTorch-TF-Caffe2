@@ -14,14 +14,3 @@ class TorchModel(nn.ModuleList):
 		out = torch.sigmoid(out)
 		
 		return out
-		
-	@staticmethod
-	def score(y_true, y_pred):
-		tp, fp = 0, 0
-		for ytrue, ypred in zip(y_true, y_pred):
-			if (ytrue == 1) and (ypred >= 0.5):
-				tp += 1
-			elif (ytrue == 0) and (ypred < 0.5):
-				fp += 1
-		
-		return (tp + fp)/len(y_true)

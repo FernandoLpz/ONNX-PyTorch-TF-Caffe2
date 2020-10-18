@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+from src import Evaluation
 from model.torch_model import TorchModel
 
 class Train:
@@ -18,7 +18,7 @@ class Train:
       self.batch_size = 2
       self.num_epochs = 100
       self.learning_rate = 0.1
-      self.onnx_path = f"onnx"
+      self.onnx_path = f"onnx/"
       
    def train_torch_model(self):
    
@@ -57,7 +57,7 @@ class Train:
    			   # Turn model into evaluation mode
    				self.model.eval()
    				ypred = self.model(self.x)
-   				score = self.model.score(self.y, ypred) 
+   				score = Evaluation.score(self.y, ypred) 
    			print("Epoch: %d,  Loss: %.5f, Accuracy: %.5f " % (epoch, loss.item(), score))
    			
    	pass
@@ -81,8 +81,11 @@ class Train:
 
       # Save the model as onnx
       torch.onnx.export(self.model, x, 
-                        f"{self.onnx_path}/torch_model.onnx", 
+                        f"{self.onnx_path}torch_model.onnx", 
                         verbose=verbose, 
                         input_names=input_names, 
                         output_names=output_names,
+                        # dynamic_axis allow us to define which dimentsion size
+                        # will vary when loading the model with other framework 
+                        # (e.g. onnnxruntime, keras, caffe2, etc.)
                         dynamic_axes={"input": {0: "batch"}})
