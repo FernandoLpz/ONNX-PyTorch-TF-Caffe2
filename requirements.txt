@@ -5,4 +5,6 @@ onnx==1.7.0
 onnxruntime==1.5.1
 scikit-learn==0.23.2
 torch==1.6.0
+cntk==2.7
+onnx-tf
 sklearn

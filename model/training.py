@@ -62,7 +62,7 @@ class Train:
    			
    	pass
    	
-   def save_model(self, dummy_input=False, names=True, verbose=False):
+   def save_model(self, dummy_input=False, verbose=False):
       # If true, a generic input is generated
       # otherwise the training tensor is used
       if dummy_input:
@@ -70,14 +70,8 @@ class Train:
       else:
          x = self.x
       
-      # If true, each layer will be labeled
-      # otherwise, none name will be passed
-      if names:
-         input_names = ["input","Linear 1 (weights)","Linear 1 (biases)","Linear 2 (weights)","Linear 2 (biases)" ]
-         output_names = [ "Output Layer" ]
-      else:
-         input_names = []
-         output_names = []
+      input_names = ["Input","Linear 1 (weights)","Linear 1 (biases)","Linear 2 (weights)","Linear 2 (biases)" ]
+      output_names = [ "Output Layer" ]
 
       # Save the model as onnx
       torch.onnx.export(self.model, x, 
@@ -85,7 +79,8 @@ class Train:
                         verbose=verbose, 
                         input_names=input_names, 
                         output_names=output_names,
+                        keep_initializers_as_inputs=True,
                         # dynamic_axis allow us to define which dimentsion size
                         # will vary when loading the model with other framework 
                         # (e.g. onnnxruntime, keras, caffe2, etc.)
-                        dynamic_axes={"input": {0: "batch"}})
+                        dynamic_axes={"Input": {0: "batch"}})

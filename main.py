@@ -15,6 +15,7 @@ if __name__ == '__main__':
 	
 	# Once the model is trained and saved as torch_model.onnx,
 	# it will be loaded and evaluated with onnxruntime
-	evaluation = Evaluation('onnx/torch_model.onnx')
-	evaluation.torch_evaluation(x_test, y_test)
-	evaluation.onnxruntime_evaluation(x_test, y_test)
+	evaluation = Evaluation(x_test, y_test, 'onnx/torch_model.onnx')
+	evaluation.torch_evaluation()
+	evaluation.onnxruntime_evaluation()
+	evaluation.caffe2_evaluation()
