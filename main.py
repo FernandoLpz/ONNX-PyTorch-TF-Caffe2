@@ -14,7 +14,7 @@ if __name__ == '__main__':
 	torch_model.save_model()
 	
 	# Once the model is trained and saved as torch_model.onnx,
-	# it will be loaded and evaluated with onnxruntime
+	# it will be loaded and evaluated with onnxruntime, caff2 and tensorflow
 	evaluation = Evaluation(x_test, y_test, 'onnx/torch_model.onnx')
 	evaluation.torch_evaluation()
 	evaluation.onnxruntime_evaluation()

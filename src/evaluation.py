@@ -1,7 +1,7 @@
 import onnx
 import onnxruntime
 import caffe2.python.onnx.backend as onnx_caffe2_backend
-import cntk as C
+from onnx_tf.backend import prepare
 
 
 class Evaluation:
@@ -60,7 +60,7 @@ class Evaluation:
       score = Evaluation.score(y_true=self.y, y_pred=caffe2_predictions)
       print(f"Caffe2 accuracy: {score}")
       
-   def cntk_evaluation(self):
-      z = C.Function.load(self.onnx_model, device=C.device.cpu(), format=C.ModelFormat.ONNX)
-      cntk_predictions = z.eval({z.arguments[0]:self.x})
-      print(f"cntk_predictions: {cntk_predictions}")
+   def tensorflow_evaluation(self):
+      model = onnx.load(self.onnx_model)
+      output = prepare(model).run(self.x)  # run the loaded model
+      print(f"TENSOR FLOW output: {output}")
