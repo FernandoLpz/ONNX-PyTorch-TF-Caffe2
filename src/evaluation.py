@@ -46,7 +46,7 @@ class Evaluation:
       
       # Calculate accuracy
       score = Evaluation.score(y_true=self.y, y_pred=onnx_predictions[0])
-      print(f"ONNX accuracy: {score}")
+      print(f"ONNX Runtime accuracy: {score}")
       
       pass
       
@@ -62,5 +62,7 @@ class Evaluation:
       
    def tensorflow_evaluation(self):
       model = onnx.load(self.onnx_model)
-      output = prepare(model).run(self.x)  # run the loaded model
-      print(f"TENSOR FLOW output: {output}")
+      tensorflow_predictions = prepare(model).run(self.x)[0]  # run the loaded model
+      # Calculate accuracy
+      score = Evaluation.score(y_true=self.y, y_pred=tensorflow_predictions)
+      print(f"Tensorflow accuracy: {score}")
