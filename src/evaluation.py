@@ -2,6 +2,8 @@ import onnx
 import onnxruntime
 import caffe2.python.onnx.backend as onnx_caffe2_backend
 from onnx_tf.backend import prepare
+# import mxnet as mx
+from mxnet.contrib import onnx as onnx_mxnet
 
 
 class Evaluation:
@@ -66,3 +68,6 @@ class Evaluation:
       # Calculate accuracy
       score = Evaluation.score(y_true=self.y, y_pred=tensorflow_predictions)
       print(f"Tensorflow accuracy: {score}")
+      
+   def mxnet_evaluation(self):
+      sym, arg, aux = onnx_mxnet.import_model(self.onnx_model)

@@ -20,3 +20,4 @@ if __name__ == '__main__':
 	evaluation.onnxruntime_evaluation()
 	evaluation.caffe2_evaluation()
 	evaluation.tensorflow_evaluation()
+	evaluation.mxnet_evaluation()
