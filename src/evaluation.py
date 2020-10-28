@@ -2,7 +2,6 @@ import onnx
 import onnxruntime
 import caffe2.python.onnx.backend as onnx_caffe2_backend
 from onnx_tf.backend import prepare
-# import mxnet as mx
 from mxnet.contrib import onnx as onnx_mxnet
 
 
@@ -29,21 +28,13 @@ class Evaluation:
          elif (ytrue == 0) and (ypred < 0.5):
             fp += 1
       return (tp  + fp)/len(y_true)
-		
-   def torch_evaluation(self, x, y):
-   	# with torch.no_grad():
-   	#   model.eval()
-   	#   ypred = model(x)
-   	# return model.score(y, ypred)
-   	pass
    
-   def onnxruntime_evaluation(self):
-            
+   def onnxruntime_evaluation(self):  
       # Lauch the session
       onnx_session = onnxruntime.InferenceSession(self.onnx_model)
       # Assigns the input numpy array as input vector for the onnx session
       onnx_inputs = {onnx_session.get_inputs()[0].name : self.x}
-      # The method "run" evaluates the loaded model
+      # Inference
       onnx_predictions = onnx_session.run(None, onnx_inputs)
       
       # Calculate accuracy
@@ -53,9 +44,13 @@ class Evaluation:
       pass
       
    def caffe2_evaluation(self):
+      # Load onnx model with onnx module
       model = onnx.load(self.onnx_model)
+      # For caffe2, it must be prepared a backed (kind of the "session" in tensorflow)
       prepared_backend = onnx_caffe2_backend.prepare(model, device="CPU")
+      # Initialize the static graph
       W = {model.graph.input[0].name: self.x}
+      # Inference
       caffe2_predictions = prepared_backend.run(W)[0]
       
       # Calculate accuracy
@@ -63,11 +58,11 @@ class Evaluation:
       print(f"Caffe2 accuracy: {score}")
       
    def tensorflow_evaluation(self):
+      # Load the onnx model with onnx module
       model = onnx.load(self.onnx_model)
-      tensorflow_predictions = prepare(model).run(self.x)[0]  # run the loaded model
+      # The "prepare" function is a wrapper for a session in tensorflow
+      # Inference
+      tensorflow_predictions = prepare(model).run(self.x)[0] 
       # Calculate accuracy
       score = Evaluation.score(y_true=self.y, y_pred=tensorflow_predictions)
       print(f"Tensorflow accuracy: {score}")
-      
-   def mxnet_evaluation(self):
-      sym, arg, aux = onnx_mxnet.import_model(self.onnx_model)
